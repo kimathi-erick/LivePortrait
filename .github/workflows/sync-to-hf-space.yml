@@ -24,15 +24,18 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           echo "Adding Hugging Face Space as remote"
-          git remote add hf https://ourl:$HF_TOKEN@huggingface.co/spaces/ourl/livepotrait || true  # '|| true' ignores if remote already exists
+          git remote add hf https://ourl:$HF_TOKEN@huggingface.co/spaces/ourl/livepotrait || true
+          
+          echo "Setting Git user identity"
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
           
           echo "Pulling and rebasing from Hugging Face remote"
           git pull hf main --rebase
           
           echo "Pulling LFS files from Hugging Face remote"
-          git lfs pull hf main
+          git lfs pull --include="*.mp4,*.png,*.gif,*.jpg" hf main
           
-          # Optional: Resolve any potential conflicts manually if needed (this is automated; check logs if issues arise)
           if git status --porcelain | grep -q '^UU'; then
             echo "Merge conflicts detected! This workflow may need manual intervention."
             exit 1
@@ -43,6 +46,4 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           echo "Pushing to https://huggingface.co/spaces/ourl/livepotrait"
-          git config user.email "actions@github.com"
-          git config user.name "GitHub Actions"
           git push hf main
