@@ -10,11 +10,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repository with LFS
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
           lfs: true
+
+      - name: Pull LFS files
+        run: git lfs pull
 
       - name: Push to Hugging Face Space
         env:
@@ -23,4 +26,5 @@ jobs:
           echo "Pushing to https://huggingface.co/spaces/ourl/livepotrait"
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
+          git config lfs.allowincompletepush true
           git push https://ourl:$HF_TOKEN@huggingface.co/spaces/ourl/livepotrait main
