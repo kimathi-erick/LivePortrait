@@ -16,8 +16,27 @@ jobs:
           fetch-depth: 0
           lfs: true
 
-      - name: Pull LFS files
+      - name: Pull LFS files from GitHub
         run: git lfs pull
+
+      - name: Add Hugging Face as remote and sync
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          echo "Adding Hugging Face Space as remote"
+          git remote add hf https://ourl:$HF_TOKEN@huggingface.co/spaces/ourl/livepotrait || true  # '|| true' ignores if remote already exists
+          
+          echo "Pulling and rebasing from Hugging Face remote"
+          git pull hf main --rebase
+          
+          echo "Pulling LFS files from Hugging Face remote"
+          git lfs pull hf main
+          
+          # Optional: Resolve any potential conflicts manually if needed (this is automated; check logs if issues arise)
+          if git status --porcelain | grep -q '^UU'; then
+            echo "Merge conflicts detected! This workflow may need manual intervention."
+            exit 1
+          fi
 
       - name: Push to Hugging Face Space
         env:
@@ -26,5 +45,4 @@ jobs:
           echo "Pushing to https://huggingface.co/spaces/ourl/livepotrait"
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-          git config lfs.allowincompletepush true
-          git push https://ourl:$HF_TOKEN@huggingface.co/spaces/ourl/livepotrait main
+          git push hf main
